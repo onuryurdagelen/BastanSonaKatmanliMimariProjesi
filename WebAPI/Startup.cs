@@ -32,9 +32,9 @@ namespace WebAPI
             //Autofac,Ninject,CastleWindsor,StructureMap,LightInject,DryInject ==> IoC Container
             //AOP => Autofac bize AOP imkani saglar.
             services.AddControllers();
-            services.AddSingleton<IProductService, ProductManager>();
+            //services.AddSingleton<IProductService, ProductManager>();
             //Hafizada sadece bir tane ProductManager tutariz.Her yerde onu kullanilir.
-            services.AddSingleton<IProductDal, EfProductDal>();
+            //services.AddSingleton<IProductDal, EfProductDal>();
            //Eger sen IProductDal implemente ederse ona git EfProductDal ver demektir.
             //Singleton'u icinde data tutmuyorsak kullaniliriz.
             services.AddSwaggerGen(c =>

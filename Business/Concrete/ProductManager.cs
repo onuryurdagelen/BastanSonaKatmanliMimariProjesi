@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Business.Abstract;
 using Business.Constants;
+using Business.ValidationRules.FluentValidation;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.DTOs;
+using FluentValidation;
+using ValidationException = FluentValidation.ValidationException;
 
 namespace Business.Concrete
 {
@@ -25,13 +29,23 @@ namespace Business.Concrete
         //[Transaction]
         public IResult Add(Product product)
         {
+            //business codes
+            //validation
+
+            var context = new ValidationContext<Product>(product);
+            ProductValidator productValidator = new ProductValidator();
+            var result = productValidator.Validate(context);
+            if (!result.IsValid)
+            {
+                throw new ValidationException(result.Errors);
+            }
             _productDal.Add(product);
             return new SuccessResult(Messages.ProductAdded);
         }
 
         public IDataResult<List<Product>> GetAll()
         {
-            if (DateTime.Now.Hour >= 2)
+            if (DateTime.Now.Hour <= 2)
             {
                 return new ErrorDataResult<List<Product>>(Messages.MaintenanceTime);
             }
