@@ -1,3 +1,7 @@
+using Business.Abstract;
+using Business.Concrete;
+using DataAccess.Abstract;
+using DataAccess.Concrete.EntityFramework;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -25,8 +29,14 @@ namespace WebAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
+            //Autofac,Ninject,CastleWindsor,StructureMap,LightInject,DryInject ==> IoC Container
+            //AOP => Autofac bize AOP imkani saglar.
             services.AddControllers();
+            services.AddSingleton<IProductService, ProductManager>();
+            //Hafizada sadece bir tane ProductManager tutariz.Her yerde onu kullanilir.
+            services.AddSingleton<IProductDal, EfProductDal>();
+           //Eger sen IProductDal implemente ederse ona git EfProductDal ver demektir.
+            //Singleton'u icinde data tutmuyorsak kullaniliriz.
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebAPI", Version = "v1" });

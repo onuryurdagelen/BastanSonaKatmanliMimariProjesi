@@ -1,4 +1,8 @@
-﻿using Entities.Concrete;
+﻿using Business.Abstract;
+using Business.Concrete;
+using Core.Utilities.Results;
+using DataAccess.Concrete.EntityFramework;
+using Entities.Concrete;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -12,14 +16,47 @@ namespace WebAPI.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        [HttpGet]
-        public List<Product> Get()
+        //Loosely coupled => gevsek bagimlilik
+        //naming convention
+        //IoC Container ==> Inversion of control(Degisimin kontrolu)
+        private readonly IProductService _productService;
+
+        public ProductsController(IProductService productService)
         {
-            return new List<Product>
+            _productService = productService;
+        }
+
+        [HttpGet("getAll")]
+        public IActionResult GetAll()
+        {
+            //Dependency chain --
+            
+            var result = _productService.GetAll();
+            if (result.Success)
             {
-                new Product{ProductId = 1 ,ProductName = "Elma"},
-                new Product{ProductId = 2 ,ProductName = "Armut"},
-            };
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+        [HttpPost("add")]
+        public IActionResult Add(Product product)
+        {
+            var result = _productService.Add(product);
+            if (result.Success)
+            {
+                return Created("",result);
+            }
+            return BadRequest(result.Message);
+        }
+        [HttpGet("getbyid")]
+        public IActionResult GetById(int id)
+        {
+            var result = _productService.GetById(id);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
         }
     }
 }
