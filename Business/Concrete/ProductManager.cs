@@ -5,6 +5,8 @@ using System.Linq;
 using Business.Abstract;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
+using Core.Aspects.Autofac.Validation;
+using Core.CrossCuttingConcerns.Validation;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
@@ -23,22 +25,9 @@ namespace Business.Concrete
             _productDal = productDal;
         }
         //AOP
-        //[LogAspect]
-        //[RemoveCache]
-        //[Validate]
-        //[Transaction]
+        [ValidationAspect(typeof(ProductValidator))]
         public IResult Add(Product product)
         {
-            //business codes
-            //validation
-
-            var context = new ValidationContext<Product>(product);
-            ProductValidator productValidator = new ProductValidator();
-            var result = productValidator.Validate(context);
-            if (!result.IsValid)
-            {
-                throw new ValidationException(result.Errors);
-            }
             _productDal.Add(product);
             return new SuccessResult(Messages.ProductAdded);
         }
