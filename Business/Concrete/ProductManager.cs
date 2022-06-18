@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Business.Abstract;
+using Business.CCS;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
 using Core.Aspects.Autofac.Validation;
@@ -19,17 +20,29 @@ namespace Business.Concrete
     public class ProductManager : IProductService
     {
         IProductDal _productDal;
+        ILogger _logger;
 
-        public ProductManager(IProductDal productDal)
+        public ProductManager(IProductDal productDal,ILogger logger)
         {
             _productDal = productDal;
+            _logger = logger;
         }
         //AOP
+
         [ValidationAspect(typeof(ProductValidator))]
         public IResult Add(Product product)
         {
+            //Bir kategoride en fazla 10 urun olabilir.
+            var result = CheckIfProductCountOfCategoryCorrect(product.CategoryId);
+            if (result.Success)
+            {
             _productDal.Add(product);
             return new SuccessResult(Messages.ProductAdded);
+
+            }
+            return new ErrorResult(result.Message);
+            //_logger.Log(); // Bir kisinin Add islemi yapmaya niyetlendi demektir.
+            //busines codes
         }
 
         public IDataResult<List<Product>> GetAll()
@@ -70,6 +83,15 @@ namespace Business.Concrete
                 return new ErrorDataResult<List<ProductDetailDto>>(Messages.MaintenanceTime);
             }
             return new SuccessDataResult<List<ProductDetailDto>>(_productDal.GetProductDetails());
+        }
+        private IResult CheckIfProductCountOfCategoryCorrect(int categoryId)
+        {
+            var result = _productDal.GetAll(p => p.CategoryId == categoryId).Count;
+            if (result >= 15) 
+            { 
+                return new ErrorResult(Messages.ProductCountOfCategoryError);
+            }
+            return new SuccessResult();
         }
     }
 }
