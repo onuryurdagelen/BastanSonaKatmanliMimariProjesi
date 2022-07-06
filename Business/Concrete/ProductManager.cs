@@ -8,6 +8,7 @@ using Business.Constants;
 using Business.ValidationRules.FluentValidation;
 using Core.Aspects.Autofac.Validation;
 using Core.CrossCuttingConcerns.Validation;
+using Core.Utilities.Business;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
@@ -20,30 +21,37 @@ namespace Business.Concrete
     public class ProductManager : IProductService
     {
         IProductDal _productDal;
+        ICategoryService _cagegoryService;
         ILogger _logger;
 
-        public ProductManager(IProductDal productDal,ILogger logger)
+        public ProductManager(IProductDal productDal, ILogger logger, ICategoryService categoryService)
         {
             _productDal = productDal;
             _logger = logger;
+            _cagegoryService = categoryService;
         }
         //AOP
 
         [ValidationAspect(typeof(ProductValidator))]
         public IResult Add(Product product)
         {
+            //Aynı isimde urun eklenemez.
+            //Eğer mevcut kategori sayısı 15'i geçtiyse sisteme yeni ürün eklenemez.
             //Bir kategoride en fazla 10 urun olabilir.
-            var result = CheckIfProductCountOfCategoryCorrect(product.CategoryId);
-            if (result.Success)
+            IResult result = BusinessRules.Run(CheckIfProductCountOfCategoryCorrect(product.CategoryId), //İş kuralı ekledik burada.
+                CheckIfProductNameExists(product.ProductName),
+                CheckIfCategoryLimitsExceeded(product.CategoryId));
+            if (result != null)
             {
+                return result;
+            }
             _productDal.Add(product);
             return new SuccessResult(Messages.ProductAdded);
-
-            }
-            return new ErrorResult(result.Message);
             //_logger.Log(); // Bir kisinin Add islemi yapmaya niyetlendi demektir.
             //busines codes
         }
+
+        
 
         public IDataResult<List<Product>> GetAll()
         {
@@ -73,7 +81,13 @@ namespace Business.Concrete
 
         public IResult Update(Product product)
         {
-            throw new NotImplementedException();
+            var result = _productDal.Get(p => p.ProductId == product.ProductId);
+
+            if (result != null)
+            {
+                _productDal.Update(result);
+            }
+            return new ErrorResult("Böyle bir ürün bulunamadı.");
         }
 
         public IDataResult<List<ProductDetailDto>> GetProductDetails()
@@ -86,10 +100,32 @@ namespace Business.Concrete
         }
         private IResult CheckIfProductCountOfCategoryCorrect(int categoryId)
         {
+            //Select count(*) from products where categoryId=1
             var result = _productDal.GetAll(p => p.CategoryId == categoryId).Count;
             if (result >= 15) 
             { 
                 return new ErrorResult(Messages.ProductCountOfCategoryError);
+            }
+            return new SuccessResult();
+        }
+        private IResult CheckIfProductNameExists(string productName)
+        {
+           
+            var result = _productDal.GetAll(p => p.ProductName == productName).Any();
+
+            if (!result)
+            {
+                return new ErrorResult(Messages.ProductNameAlreadyExists);
+            }
+            return new SuccessResult();
+            
+        }
+        private IResult CheckIfCategoryLimitsExceeded(int categoryId)
+        {
+            var result = _cagegoryService.GetAll();
+            if (result.Data.Count > 15)
+            {
+                return new ErrorResult(Messages.CategoryLimitExceded);
             }
             return new SuccessResult();
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Text;
 using Business.Abstract;
 using Core.Utilities.Results;
@@ -17,11 +18,14 @@ namespace Business.Concrete
             _categoryDal = categoryDal;
         }
 
-        public IDataResult<List<Category>>  GetAll()
+       
+
+        public IDataResult<List<Category>> GetAll()
         {
-           
             return new SuccessDataResult<List<Category>>(_categoryDal.GetAll());
+               
         }
+
         //select * from Categories where CategoryId=3
         public IDataResult<Category>  GetById(int categoryId)
         {
