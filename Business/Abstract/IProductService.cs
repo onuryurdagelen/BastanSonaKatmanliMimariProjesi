@@ -1,22 +1,23 @@
-﻿using System;
+﻿using Core.Utilities.Results;
+using Entities.Concrete;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using Core.Utilities.Results;
-using Entities.Concrete;
-using Entities.DTOs;
 
 namespace Business.Abstract
 {
     public interface IProductService
     {
-        IDataResult<List<Product>> GetAll();
-        IDataResult<List<Product>> GetAllByCategoryId(int id);
-        IDataResult<List<Product>> GetByUnitPrice(decimal min, decimal max);
-        IDataResult<List<ProductDetailDto>> GetProductDetails();
         IDataResult<Product> GetById(int productId);
+        IDataResult<List<Product>> GetList();
+        IDataResult<List<Product>> GetListByCategory(int categoryId);
         IResult Add(Product product);
+        IResult Delete(Product product);
         IResult Update(Product product);
 
-        //RESTFUL --> HTTP -->
+        IResult TransactionalOperation(Product product);
+
+        //Transaction yönetimi uygulamalarda tutarlılığı korumak için yaptığımız yöntemdir.
+
     }
 }
